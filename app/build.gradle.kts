@@ -52,6 +52,10 @@ dependencies {
 
     implementation(libs.androidx.material3)
 
+    implementation(libs.osmosis.osm.binary)
+    implementation(libs.osmdroid)
+    implementation(libs.protobuf.java)
+
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
 
@@ -60,6 +64,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.play.services.maps)
 
     // Tests
     testImplementation(libs.junit)

@@ -1,16 +1,19 @@
 package se.umu.cs.phjo0015.mapapplication
 
 import android.os.Bundle
+import android.preference.PreferenceManager
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.ComposeView
 import androidx.navigation.fragment.NavHostFragment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import org.osmdroid.config.Configuration
 
 // TODO: Rename parameter arguments, choose names that match
 
@@ -29,17 +32,34 @@ class MapFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
+        // Important: init OSMDroid
+        Configuration.getInstance().load(requireContext(), PreferenceManager.getDefaultSharedPreferences(requireContext()))
+        Configuration.getInstance().userAgentValue = "MapApp"
+
         // Inflate the layout for this fragment
         val view = ComposeView(requireContext())
         view.setContent {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                FilledButtonExample(
-                    onClick = { changeView() }
-                )
+            Box {
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+
+                    OsmdroidMapView(requireContext())
+                }
             }
+
+
+            //Box(
+                //modifier = Modifier.fillMaxSize(),
+                //contentAlignment = Alignment.Center
+            //) {
+                //FilledButtonExample(
+                    //onClick = { changeView() }
+                //)
+            //}
         }
 
         return view
