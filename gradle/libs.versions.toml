@@ -15,6 +15,7 @@ composeBom = "2025.06.01"
 activityCompose = "1.10.1"
 osmosis = "0.48.3"
 osmdroid = "6.1.14"
+osmbonuspack = "6.9.0"
 protobuf = "3.12.2"
 playServicesMaps = "19.2.0"
 
@@ -36,6 +37,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
+osmdroid-bonuspack = { group = "com.github.MKergall", name = "osmbonuspack", version.ref = "osmbonuspack" }
 osmosis-osm-binary = { group = "org.openstreetmap.osmosis", name = "osmosis-osm-binary", version.ref = "osmosis" }
 protobuf-java = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }

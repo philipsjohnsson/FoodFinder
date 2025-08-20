@@ -54,6 +54,7 @@ dependencies {
 
     implementation(libs.osmosis.osm.binary)
     implementation(libs.osmdroid)
+    implementation(libs.osmdroid.bonuspack)
     implementation(libs.protobuf.java)
 
     // Compose BOM
