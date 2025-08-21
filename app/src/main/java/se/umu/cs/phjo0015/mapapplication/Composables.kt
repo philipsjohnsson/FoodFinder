@@ -2,6 +2,7 @@ package se.umu.cs.phjo0015.mapapplication
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -18,6 +19,7 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import org.osmdroid.bonuspack.utils.BonusPackHelper
 // import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
+import kotlin.random.Random
 
 @Composable
 fun FilledButtonExample(onClick: () -> Unit) {
@@ -49,10 +51,13 @@ fun OsmdroidMapView(callbackOnMarkerClick: (Marker) -> Boolean) {
             mapController.setCenter(GeoPoint(63.8258, 20.2630))
 
             // CLUSTER: https://github.com/MKergall/osmbonuspack/wiki/Tutorial_3
-            // EDIT cluster design: 11 in the link above.
+            // To edit this cluster design look at the part 11 in the link above.
             val poiMarkers: RadiusMarkerClusterer = RadiusMarkerClusterer(context)
             val clusterIcon: Bitmap = BonusPackHelper.getBitmapFromVectorDrawable(context, R.drawable.marker_cluster)
             poiMarkers.setIcon(clusterIcon)
+
+            /**
+             *
 
             val points = listOf(
                 GeoPoint(63.8258, 20.2630),
@@ -71,8 +76,16 @@ fun OsmdroidMapView(callbackOnMarkerClick: (Marker) -> Boolean) {
                 GeoPoint(63.8262, 20.2631),
                 GeoPoint(63.8255, 20.2630)
             )
+            */
 
-            for (point in points) {
+            val randomPoints = List(100) {
+                val lat = 63.8258 + Random.nextDouble(-0.001, 0.001) // +/- 0.001 ~ ca 100 m
+                val lon = 20.2630 + Random.nextDouble(-0.001, 0.001)
+                GeoPoint(lat, lon)
+            }
+
+
+            for (point in randomPoints) {
                 val marker = Marker(mapView)
                 marker.position = point
                 marker.icon = ContextCompat.getDrawable(context, R.drawable.restaurant_icon)
