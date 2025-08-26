@@ -19,4 +19,9 @@
         android:name="se.umu.cs.phjo0015.mapapplication.TestFragment"
         android:label="fragment_test"
         tools:layout="@layout/fragment_test" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="se.umu.cs.phjo0015.mapapplication.SettingsFragment"
+        android:label="fragment_settings"
+        tools:layout="@layout/fragment_settings" />
 </navigation>

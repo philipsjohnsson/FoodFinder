@@ -7,55 +7,35 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.platform.ComposeView
 import androidx.navigation.fragment.NavHostFragment
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapEventsReceiver
-import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
-import se.umu.cs.phjo0015.mapapplication.overlays.BtmSheetWithDrag
-import se.umu.cs.phjo0015.mapapplication.overlays.InfoDialogExample
-
-// TODO: Rename parameter arguments, choose names that match
+import se.umu.cs.phjo0015.mapapplication.overlays.BottomSheetWithDrag
+import android.hardware.Sensor
+import android.hardware.SensorManager
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
+import androidx.appcompat.widget.Toolbar
 
 /**
  * A simple [Fragment] subclass.
  * Use the [MapFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class MapFragment : Fragment(), MapEventsReceiver {
+class MapFragment : Fragment() {
     private var showDialog: MutableState<Boolean> = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,47 +55,57 @@ class MapFragment : Fragment(), MapEventsReceiver {
 
         // Inflate the layout for this fragment
         val view = ComposeView(requireContext())
+
+
         view.setContent {
+
             Box {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     OsmdroidMapView(::onMarkerClick)
                 }
             }
 
-            // Start for bottom sheet
 
             if (showDialog.value) {
                 // Screen content
 
-                BtmSheetWithDrag(::setBottomSheetVisible)
-
                 // https://developer.android.com/develop/ui/compose/components/bottom-sheets
                 // https://developer.android.com/reference/kotlin/androidx/compose/material3/SheetState
+                BottomSheetWithDrag(::setBottomSheetVisible)
 
-
-                // BtmSheet()
+                // changeView()
 
             }
-
-            /**
-             *
-            if(showDialog.value) {
-                InfoDialogExample(
-                    ::onDismissRequest,
-                    ::onConfirmation,
-                    "Test",
-                    "Text content",
-                    Icons.Default.KeyboardArrowUp
-                )
-            }
-            */
         }
 
+
+
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupMenu()
+    }
+
+    private fun setupMenu() {
+        (requireActivity() as MenuHost).addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                val toolbar = requireActivity().findViewById<Toolbar>(R.id.my_toolbar)
+
+                toolbar.setNavigationIcon(R.drawable.hamburgermenu)
+                toolbar.setNavigationOnClickListener {
+                    (requireActivity() as MainActivity).toggleDrawer()
+                }
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return true
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     fun changeView() {
@@ -137,23 +127,9 @@ class MapFragment : Fragment(), MapEventsReceiver {
         showDialog.value = false
     }
 
-    fun onConfirmation() {
-
-    }
-
-    override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun longPressHelper(p: GeoPoint?): Boolean {
-        TODO("Not yet implemented")
-    }
-
     companion object {
         fun newInstance(): MapFragment {
-            val fragment = MapFragment()
-            return fragment
+            return MapFragment()
         }
-
     }
 }

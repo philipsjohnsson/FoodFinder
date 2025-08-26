@@ -18,6 +18,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import org.osmdroid.bonuspack.utils.BonusPackHelper
+import org.osmdroid.views.overlay.CopyrightOverlay
 // import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import kotlin.random.Random
 
@@ -37,9 +38,10 @@ fun FilledButtonExample(onClick: () -> Unit) {
 // https://github.com/MKergall/osmbonuspack/wiki/HowToInclude
 
 @Composable
-fun OsmdroidMapView(callbackOnMarkerClick: (Marker) -> Boolean) {
+fun OsmdroidMapView(
+    callbackOnMarkerClick: (Marker) -> Boolean
+) {
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
         factory = { context ->
             val mapView = MapView(context)
             mapView.setTileSource(TileSourceFactory.MAPNIK)
@@ -53,6 +55,8 @@ fun OsmdroidMapView(callbackOnMarkerClick: (Marker) -> Boolean) {
             // CLUSTER: https://github.com/MKergall/osmbonuspack/wiki/Tutorial_3
             // To edit this cluster design look at the part 11 in the link above.
             val poiMarkers: RadiusMarkerClusterer = RadiusMarkerClusterer(context)
+            //val testClusterIcon = ContextCompat.getDrawable(context, R.drawable.restaurant_icon)
+
             val clusterIcon: Bitmap = BonusPackHelper.getBitmapFromVectorDrawable(context, R.drawable.marker_cluster)
             poiMarkers.setIcon(clusterIcon)
 
@@ -98,6 +102,10 @@ fun OsmdroidMapView(callbackOnMarkerClick: (Marker) -> Boolean) {
             }
 
             mapView.overlays.add(poiMarkers)
+
+            val copyRightOverlay = CopyrightOverlay(context)
+            mapView.overlays.add(copyRightOverlay)
+
             mapView.invalidate()
 
             return@AndroidView mapView
