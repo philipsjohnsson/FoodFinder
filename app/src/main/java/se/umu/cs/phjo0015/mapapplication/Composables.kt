@@ -19,8 +19,10 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import org.osmdroid.bonuspack.utils.BonusPackHelper
 import org.osmdroid.views.overlay.CopyrightOverlay
+import se.umu.cs.phjo0015.mapapplication.interfaces.UserLocation
 // import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import kotlin.random.Random
+import androidx.compose.runtime.State
 
 @Composable
 fun FilledButtonExample(onClick: () -> Unit) {
@@ -39,7 +41,8 @@ fun FilledButtonExample(onClick: () -> Unit) {
 
 @Composable
 fun OsmdroidMapView(
-    callbackOnMarkerClick: (Marker) -> Boolean
+    callbackOnMarkerClick: (Marker) -> Boolean,
+    userLocationState: State<UserLocation?>
 ) {
     AndroidView(
         factory = { context ->
@@ -50,7 +53,7 @@ fun OsmdroidMapView(
 
             val mapController = mapView.controller
             mapController.setZoom(10.0)
-            mapController.setCenter(GeoPoint(63.8258, 20.2630))
+            //mapController.setCenter(GeoPoint(63.8258, 20.2630))
 
             // CLUSTER: https://github.com/MKergall/osmbonuspack/wiki/Tutorial_3
             // To edit this cluster design look at the part 11 in the link above.
@@ -88,6 +91,9 @@ fun OsmdroidMapView(
                 GeoPoint(lat, lon)
             }
 
+            var userPosition: GeoPoint? = null
+            println(userLocationState.value?.latitude)
+            println(userLocationState)
 
             for (point in randomPoints) {
                 val marker = Marker(mapView)
@@ -109,8 +115,30 @@ fun OsmdroidMapView(
             mapView.invalidate()
 
             return@AndroidView mapView
+        },
+        update = { mapView ->
+
+
+            userLocationState.value?.let { userLocation ->
+                val userPoint = GeoPoint(userLocation.longitude, userLocation.latitude)
+                val userMarker = Marker(mapView).apply {
+                    position = userPoint
+                    title = "Användarens plats"
+                    icon = ContextCompat.getDrawable(mapView.context, R.drawable.restaurant_icon)
+                }
+                // poiMarkers.add(marker)
+                mapView.overlays.add(userMarker)
+                mapView.controller.setCenter(userPoint)
+            }
+
+            mapView.invalidate()
         }
     )
+}
+
+@Composable
+fun LaunchedEffect(x0: UserLocation?, content: @Composable () -> Unit) {
+    TODO("Not yet implemented")
 }
 
 fun setMarkerOnMap(context: Context, mapView: MapView, lat: Double, long: Double) {

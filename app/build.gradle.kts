@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
 
     // Tests
     testImplementation(libs.junit)

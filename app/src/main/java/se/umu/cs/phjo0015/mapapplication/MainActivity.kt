@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
 
         val drawerLayout = findViewById<androidx.drawerlayout.widget.DrawerLayout>(R.id.drawer_layout)
-        drawerLayout.closeDrawer(GravityCompat.START, false) // false = utan animation
+        drawerLayout.closeDrawer(GravityCompat.START, false) // false = no animation
 
         findViewById<ComposeView>(R.id.compose_drawer).setContent {
             DrawerContent(::onClickDrawerItem)
@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
             return R.id.settingsFragment
         }
 
+        // Default, come to the map view
         return R.id.mapFragment
     }
 

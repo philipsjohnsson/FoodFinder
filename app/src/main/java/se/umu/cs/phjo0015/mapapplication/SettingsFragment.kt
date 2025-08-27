@@ -1,7 +1,12 @@
 package se.umu.cs.phjo0015.mapapplication
 
+import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.app.AlertDialog
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -11,6 +16,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.appcompat.widget.Toolbar
 import androidx.compose.foundation.layout.Column
@@ -20,11 +26,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import se.umu.cs.phjo0015.mapapplication.utils.PermissionManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 /**
  * A simple [Fragment] subclass.
@@ -33,50 +42,71 @@ import se.umu.cs.phjo0015.mapapplication.utils.PermissionManager
  */
 class SettingsFragment : Fragment() {
 
-    // private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var permissionManager: PermissionManager
-    // Gör det här till Compose state
     private var permissionState = mutableStateOf("NO")
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    // private var sharedPrefs: SharedPreferences = requireContext().getSharedPreferences("mypref", MODE_PRIVATE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         permissionManager = PermissionManager(requestPermissionLauncher)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
     }
 
-    // Register the permissions callback, which handles the user's response to the
-    // system permissions dialog. Save the return value, an instance of
-    // ActivityResultLauncher. You can use either a val, as shown in this snippet,
-    // or a lateinit var in your onAttach() or onCreate() method.
-    private val requestPermissionLauncher = registerForActivityResult(RequestPermission()
+    /**
+     *
+     * https://developer.android.com/training/permissions/requesting#principles
+     * https://www.youtube.com/watch?v=7RDKN0WFEVc
+     *
+     * Register the permissions callback, which handles the user's response to the
+     * system permissions dialog. Save the return value, an instance of
+     * ActivityResultLauncher. You can use either a val, as shown in this snippet,
+     * or a lateinit var in your onAttach() or onCreate() method.
+     */
+    private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) {
-            println("LOCATION PERMISSION IS OK")
-            permissionState.value = "JAG HAR PERMISSION"
+        try {
+            if (isGranted) {
+                println("LOCATION PERMISSION IS OK")
+                permissionState.value = "JAG HAR PERMISSION"
 
-            // Permission is granted. Continue the action or workflow in your
-            // app.
-        } else {
-            println("NO LOCATION PERMISSION")
-            permissionState.value = "INGEN PERMISSION"
+                // Permission is granted. Continue the action or workflow in your
+                // app.
 
-            // Explain to the user that the feature is unavailable because the
-            // feature requires a permission that the user has denied. At the
-            // same time, respect the user's decision. Don't link to system
-            // settings in an effort to convince the user to change their
-            // decision.
-            showPermissionRational() {
-                permissionManager.requestLocationPermission()
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location : Location? ->
+                        println("LOCATION UNDER HERE:")
+                        println(location?.latitude)
+                        println(location?.longitude)
+                        // Got last known location. In some rare situations this can be null.
+                    }
+            } else {
+                println("NO LOCATION PERMISSION")
+                permissionState.value = "INGEN PERMISSION"
+
+                // Explain to the user that the feature is unavailable because the
+                // feature requires a permission that the user has denied. At the
+                // same time, respect the user's decision. Don't link to system
+                // settings in an effort to convince the user to change their
+                // decision.
+                showPermissionRational() {
+                    permissionManager.requestLocationPermission()
+                }
             }
+        } catch (e: SecurityException) {
+            println("ERROR HANDLING")
+            println(e)
         }
+
     }
 
     fun showPermissionRational(positiveAction: () -> Unit) {
         AlertDialog.Builder(requireActivity())
-            .setTitle("Location permission")
-            .setMessage("Platsåtkomst behövs för appen att visa din position")
-            .setPositiveButton(R.string.hamburgermenu) {_, _ -> positiveAction()}
-            .setNegativeButton(R.string.hamburgermenu) {dialog,_ -> dialog.dismiss() }
+            .setTitle("Platsåtkomst")
+            .setMessage("Platsåtkomst behövs för att visa din position")
+            .setPositiveButton(R.string.hamburgermenu) {_, _ -> positiveAction()} // TODO: CHANGE ICONS
+            .setNegativeButton(R.string.hamburgermenu) {dialog,_ -> dialog.dismiss() } // TODO: CHANGE ICONS
             .create().show()
     }
 
@@ -111,6 +141,8 @@ class SettingsFragment : Fragment() {
     private fun setupMenu() {
         (requireActivity() as MenuHost).addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+
+
                 val toolbar = requireActivity().findViewById<Toolbar>(R.id.my_toolbar)
 
                 toolbar.setNavigationIcon(R.drawable.back)
