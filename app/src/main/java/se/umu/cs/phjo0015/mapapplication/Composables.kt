@@ -1,9 +1,6 @@
 package se.umu.cs.phjo0015.mapapplication
 
-import android.content.Context
 import android.graphics.Bitmap
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -19,7 +16,7 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import org.osmdroid.bonuspack.utils.BonusPackHelper
 import org.osmdroid.views.overlay.CopyrightOverlay
-import se.umu.cs.phjo0015.mapapplication.interfaces.UserLocation
+import se.umu.cs.phjo0015.mapapplication.model.UserLocation
 // import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import kotlin.random.Random
 import androidx.compose.runtime.State
@@ -52,8 +49,8 @@ fun OsmdroidMapView(
             mapView.setMultiTouchControls(true)
 
             val mapController = mapView.controller
-            mapController.setZoom(10.0)
-            //mapController.setCenter(GeoPoint(63.8258, 20.2630))
+            mapController.setZoom(5.0)
+            mapController.setCenter(GeoPoint(63.189460, 14.607896))
 
             // CLUSTER: https://github.com/MKergall/osmbonuspack/wiki/Tutorial_3
             // To edit this cluster design look at the part 11 in the link above.
@@ -118,7 +115,6 @@ fun OsmdroidMapView(
         },
         update = { mapView ->
 
-
             userLocationState.value?.let { userLocation ->
                 val userPoint = GeoPoint(userLocation.longitude, userLocation.latitude)
                 val userMarker = Marker(mapView).apply {
@@ -129,27 +125,10 @@ fun OsmdroidMapView(
                 // poiMarkers.add(marker)
                 mapView.overlays.add(userMarker)
                 mapView.controller.setCenter(userPoint)
+                mapView.controller.setZoom(8.0)
             }
 
             mapView.invalidate()
         }
     )
 }
-
-@Composable
-fun LaunchedEffect(x0: UserLocation?, content: @Composable () -> Unit) {
-    TODO("Not yet implemented")
-}
-
-fun setMarkerOnMap(context: Context, mapView: MapView, lat: Double, long: Double) {
-    val startMarker = Marker(mapView)
-
-    startMarker.setPosition(GeoPoint(lat, long))
-    startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-
-    startMarker.icon = ContextCompat.getDrawable(context, R.drawable.restaurant_icon)
-    startMarker.title = "Start point"
-
-    mapView.overlays.add(startMarker)
-}
-
