@@ -68,7 +68,7 @@ class SettingsFragment : Fragment() {
     }
 
     fun initSettings() {
-        permissionState.value = prefs.getBoolean(SHOW_USER_LOCATION, false)
+        permissionState.value = getPermissionState()
     }
 
     /**
@@ -86,25 +86,18 @@ class SettingsFragment : Fragment() {
     ) { isGranted: Boolean ->
         try {
             if (isGranted) {
-                //permissionState.value = "JAG HAR PERMISSION"
-
                 // Permission is granted. Continue the action or workflow in your
                 // app.
 
                 fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, object : CancellationToken() {
                     override fun onCanceledRequested(p0: OnTokenCanceledListener) = CancellationTokenSource().token
-
                     override fun isCancellationRequested() = false
                 })
                     .addOnSuccessListener { location : Location? ->
-                        println("JAG HAR PERMISSION")
                         setPermissionState(true)
                         // Got last known location. In some rare situations this can be null.
                     }
             } else {
-                println("NO LOCATION PERMISSION")
-                //permissionState.value = "INGEN PERMISSION"
-
                 // Explain to the user that the feature is unavailable because the
                 // feature requires a permission that the user has denied. At the
                 // same time, respect the user's decision. Don't link to system
@@ -118,7 +111,6 @@ class SettingsFragment : Fragment() {
             println("ERROR HANDLING")
             println(e)
         }
-
     }
 
     fun showPermissionRational(positiveAction: () -> Unit) {
@@ -143,8 +135,9 @@ class SettingsFragment : Fragment() {
         return view
     }
 
-    private fun getPermissionState(): Boolean =
-        prefs.getBoolean(SHOW_USER_LOCATION, false)
+    private fun getPermissionState(): Boolean {
+        return prefs.getBoolean(SHOW_USER_LOCATION, false)
+    }
 
     private fun setPermissionState(enabled: Boolean) {
         prefs.edit().putBoolean(SHOW_USER_LOCATION, enabled).apply()
