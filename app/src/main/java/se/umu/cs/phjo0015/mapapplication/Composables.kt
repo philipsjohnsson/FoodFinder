@@ -115,17 +115,26 @@ fun OsmdroidMapView(
         },
         update = { mapView ->
 
+            // Remove old location Marker
+            val oldMarker = mapView.getTag(R.id.user_marker) as? Marker
+            if (oldMarker != null) {
+                mapView.overlays.remove(oldMarker)
+                mapView.setTag(R.id.user_marker, null)
+            }
+
+            // Add location marker for user
             userLocationState.value?.let { userLocation ->
-                val userPoint = GeoPoint(userLocation.longitude, userLocation.latitude)
+                val userPoint = GeoPoint(userLocation.latitude, userLocation.longitude)
                 val userMarker = Marker(mapView).apply {
                     position = userPoint
                     title = "Användarens plats"
                     icon = ContextCompat.getDrawable(mapView.context, R.drawable.restaurant_icon)
                 }
-                // poiMarkers.add(marker)
+
                 mapView.overlays.add(userMarker)
                 mapView.controller.setCenter(userPoint)
                 mapView.controller.setZoom(8.0)
+                mapView.setTag(R.id.user_marker, userMarker)
             }
 
             mapView.invalidate()
