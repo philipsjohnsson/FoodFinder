@@ -19,6 +19,9 @@ osmbonuspack = "6.9.0"
 protobuf = "3.12.2"
 playServicesMaps = "19.2.0"
 playServicesLocation = "21.3.0"
+roomCompiler = "2.7.2"
+kspVersion="2.0.21-1.0.27"
+roomKtx = "2.7.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -43,9 +46,12 @@ osmosis-osm-binary = { group = "org.openstreetmap.osmosis", name = "osmosis-osm-
 protobuf-java = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ksp ={id = "com.google.devtools.ksp", version.ref="kspVersion"}
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

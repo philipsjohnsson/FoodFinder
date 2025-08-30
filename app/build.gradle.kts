@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -56,6 +57,9 @@ dependencies {
     implementation(libs.osmdroid)
     implementation(libs.osmdroid.bonuspack)
     implementation(libs.protobuf.java)
+
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))

@@ -2,8 +2,6 @@ package se.umu.cs.phjo0015.mapapplication
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -15,7 +13,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
-import androidx.navigation.fragment.NavHostFragment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -29,14 +26,12 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
@@ -44,8 +39,9 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import se.umu.cs.phjo0015.mapapplication.SettingsFragment.Companion.SHOW_USER_LOCATION
+import se.umu.cs.phjo0015.mapapplication.database.Destination
+import se.umu.cs.phjo0015.mapapplication.database.DestinationViewModel
 import se.umu.cs.phjo0015.mapapplication.model.UserLocation
-import se.umu.cs.phjo0015.mapapplication.utils.PermissionManager
 
 /**
  * A simple [Fragment] subclass.
@@ -63,6 +59,10 @@ class MapFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         prefs = requireContext().getSharedPreferences("Settings", MODE_PRIVATE)
+        if(userHasLocationPermission() != PackageManager.PERMISSION_GRANTED) {
+            setPermissionState(false)
+        }
+
         permissionState.value = getPermissionState()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
@@ -82,9 +82,23 @@ class MapFragment : Fragment() {
         Configuration.getInstance().load(requireContext(), PreferenceManager.getDefaultSharedPreferences(requireContext()))
         Configuration.getInstance().userAgentValue = "MapApp"
 
+        val viewModel = ViewModelProvider(requireActivity()).get(DestinationViewModel::class.java)
+        viewModel.destinations
+
+        viewModel.destinations.observe(viewLifecycleOwner) { destinationList ->
+            println(destinationList)
+
+            for(destination in destinationList) {
+                println(destination.topic)
+                println(destination.long)
+                println(destination.lat)
+                println(destination.description)
+            }
+        }
+
         // Inflate the layout for this fragment
         val view = ComposeView(requireContext())
-        
+
         view.setContent {
 
             Box {
@@ -135,6 +149,13 @@ class MapFragment : Fragment() {
     private fun getPermissionState(): Boolean {
         return prefs.getBoolean(SHOW_USER_LOCATION, false)
     }
+
+    private fun setPermissionState(enabled: Boolean) {
+        prefs.edit().putBoolean(SHOW_USER_LOCATION, enabled).apply()
+        permissionState.value = enabled
+    }
+
+
 
     private fun setUserLocation() {
         if( userHasLocationPermission() == PackageManager.PERMISSION_GRANTED) {
