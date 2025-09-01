@@ -20,16 +20,8 @@ import se.umu.cs.phjo0015.mapapplication.model.UserLocation
 // import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import kotlin.random.Random
 import androidx.compose.runtime.State
-
-@Composable
-fun FilledButtonExample(onClick: () -> Unit) {
-    Button(
-        onClick = { onClick() },
-        modifier = Modifier.size(width = 100.dp, height = 52.dp)
-    ) {
-        Text("Filled")
-    }
-}
+import androidx.lifecycle.LiveData
+import se.umu.cs.phjo0015.mapapplication.database.Destination
 
 // Inspired by:
 // https://stackoverflow.com/questions/77297775/create-a-map-using-openstreetmap-with-jetpack-compose-in-kotlin-programming-lang
@@ -39,6 +31,7 @@ fun FilledButtonExample(onClick: () -> Unit) {
 @Composable
 fun OsmdroidMapView(
     callbackOnMarkerClick: (Marker) -> Boolean,
+    destinations: State<List<Destination>>,
     userLocationState: State<UserLocation?>
 ) {
     AndroidView(
@@ -57,40 +50,17 @@ fun OsmdroidMapView(
             val poiMarkers: RadiusMarkerClusterer = RadiusMarkerClusterer(context)
             //val testClusterIcon = ContextCompat.getDrawable(context, R.drawable.restaurant_icon)
 
+            // Save reference for poiMarkers
+            mapView.setTag(R.id.poi_markers, poiMarkers)
+
             val clusterIcon: Bitmap = BonusPackHelper.getBitmapFromVectorDrawable(context, R.drawable.marker_cluster)
             poiMarkers.setIcon(clusterIcon)
-
-            /**
-             *
-
-            val points = listOf(
-                GeoPoint(63.8258, 20.2630),
-                GeoPoint(63.8260, 20.2632),
-                GeoPoint(63.8255, 20.2635),
-                GeoPoint(63.8262, 20.2628),
-                GeoPoint(63.8257, 20.2631),
-                GeoPoint(63.8259, 20.2633),
-                GeoPoint(63.8261, 20.2630),
-                GeoPoint(63.8256, 20.2632),
-                GeoPoint(63.8263, 20.2634),
-                GeoPoint(63.8254, 20.2629),
-                GeoPoint(63.8258, 20.2635),
-                GeoPoint(63.8260, 20.2627),
-                GeoPoint(63.8257, 20.2628),
-                GeoPoint(63.8262, 20.2631),
-                GeoPoint(63.8255, 20.2630)
-            )
-            */
 
             val randomPoints = List(100) {
                 val lat = 63.8258 + Random.nextDouble(-0.001, 0.001) // +/- 0.001 ~ ca 100 m
                 val lon = 20.2630 + Random.nextDouble(-0.001, 0.001)
                 GeoPoint(lat, lon)
             }
-
-            var userPosition: GeoPoint? = null
-            println(userLocationState.value?.latitude)
-            println(userLocationState)
 
             for (point in randomPoints) {
                 val marker = Marker(mapView)
@@ -115,6 +85,27 @@ fun OsmdroidMapView(
         },
         update = { mapView ->
 
+            val poiMarkers = mapView.getTag(R.id.poi_markers) as RadiusMarkerClusterer
+
+            // Remove old markers
+            poiMarkers.items.clear()
+
+            // Add new markers when the data has fetched from the database
+            destinations.value.forEach { destination ->
+                val marker = Marker(mapView)
+                val destinationPoint = GeoPoint(destination.lat, destination.long)
+
+                marker.position = destinationPoint
+                marker.icon = ContextCompat.getDrawable(mapView.context, R.drawable.restaurant_icon)
+                marker.title = destination.topic
+
+                marker.setOnMarkerClickListener{ m, _ ->
+                    callbackOnMarkerClick(m)
+                }
+
+                poiMarkers.add(marker)
+            }
+
             // Remove old location Marker
             val oldMarker = mapView.getTag(R.id.user_marker) as? Marker
             if (oldMarker != null) {
@@ -137,6 +128,7 @@ fun OsmdroidMapView(
                 mapView.setTag(R.id.user_marker, userMarker)
             }
 
+            poiMarkers.invalidate()
             mapView.invalidate()
         }
     )

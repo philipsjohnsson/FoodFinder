@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.livedata.observeAsState
 import org.osmdroid.config.Configuration
 import org.osmdroid.views.overlay.Marker
 import se.umu.cs.phjo0015.mapapplication.overlays.BottomSheetWithDrag
@@ -30,7 +31,9 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.appcompat.widget.Toolbar
+import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
@@ -43,6 +46,8 @@ import se.umu.cs.phjo0015.mapapplication.database.Destination
 import se.umu.cs.phjo0015.mapapplication.database.DestinationViewModel
 import se.umu.cs.phjo0015.mapapplication.model.UserLocation
 
+
+
 /**
  * A simple [Fragment] subclass.
  * Use the [MapFragment.newInstance] factory method to
@@ -54,6 +59,7 @@ class MapFragment : Fragment() {
     private var userLocationState: MutableState<UserLocation?> = mutableStateOf(null)
     private lateinit var prefs: SharedPreferences
     private var permissionState: MutableState<Boolean> = mutableStateOf(false)
+    private lateinit var destinations: LiveData<List<Destination>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,8 +88,10 @@ class MapFragment : Fragment() {
         Configuration.getInstance().load(requireContext(), PreferenceManager.getDefaultSharedPreferences(requireContext()))
         Configuration.getInstance().userAgentValue = "MapApp"
 
-        val viewModel = ViewModelProvider(requireActivity()).get(DestinationViewModel::class.java)
-        viewModel.destinations
+        val viewModel = ViewModelProvider(requireActivity())[DestinationViewModel::class.java]
+        destinations = viewModel.destinations
+
+
 
         viewModel.destinations.observe(viewLifecycleOwner) { destinationList ->
             println(destinationList)
@@ -98,15 +106,16 @@ class MapFragment : Fragment() {
 
         // Inflate the layout for this fragment
         val view = ComposeView(requireContext())
-
         view.setContent {
+
+            val destinations = viewModel.destinations.observeAsState(emptyList())
 
             Box {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    OsmdroidMapView(::onMarkerClick, userLocationState)
+                    OsmdroidMapView(::onMarkerClick, destinations, userLocationState)
                 }
             }
 

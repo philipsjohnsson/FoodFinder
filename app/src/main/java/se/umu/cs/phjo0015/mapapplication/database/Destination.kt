@@ -13,7 +13,6 @@ class Destination(
     var long: Double,
     var topic: String = "",
     var description: String = ""
-    // var destinationType: --> ADD LATER..
 ) {
     @PrimaryKey(autoGenerate = true)
     var id = 0

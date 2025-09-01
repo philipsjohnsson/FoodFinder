@@ -1,0 +1,13 @@
+sqlite3 myapp.db
+# sedan i sqlite prompt:
+CREATE TABLE destination (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    lat REAL NOT NULL,
+    long REAL NOT NULL,
+    topic TEXT NOT NULL,
+    description TEXT NOT NULL
+);
+INSERT INTO destination (lat, long, topic, description) VALUES
+(57.710984, 12.006829, "Lejonet & Björnen", "Här finns god glass att äta."),
+(57.710988, 11.987131, "Benne pastabar", "God pasta för en schysst peng");
+.exit

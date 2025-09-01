@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.osmdroid)
     implementation(libs.osmdroid.bonuspack)
     implementation(libs.protobuf.java)
+    implementation(libs.androidx.compose.runtime.livedata)
 
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)

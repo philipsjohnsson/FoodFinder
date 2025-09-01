@@ -32,11 +32,16 @@ public class DestinationViewModel(application: Application) : AndroidViewModel(a
      */
     val database: Database
         get() {
+
+            getApplication<Application>().deleteDatabase("destinationDB")
+
             if (db == null) {
                 db = Room.databaseBuilder(
                     getApplication<Application>().applicationContext,
                     Database::class.java, "destinationDB"
-                ).build()
+                )
+                    .createFromAsset("database/destination.db")
+                    .build()
             }
             return db!!
         }
@@ -47,18 +52,19 @@ public class DestinationViewModel(application: Application) : AndroidViewModel(a
 
     init {
         dao = database.destinationDao()
-        destinations = dao.all
+        destinations = dao.allDestinations
 
-        // Add default destinations in the background thread.
-        viewModelScope.launch(Dispatchers.IO) {
-            dao.insert(
-                Destination(
-                    lat = 57.710984,
-                    long = 12.006829,
-                    topic = "Lejonet & Björnen",
-                    description = "Här finns god glass att äta."
-                )
-            )
-        }
+        val destinationsToInsert: List<Destination> = getDataset()
+
+        // Add default destinations in a background thread.
+        //viewModelScope.launch(Dispatchers.IO) {
+            //val currentDestinations = dao.getAllDestinationsSync()
+
+            //if(currentDestinations.isEmpty()) {
+                //destinationsToInsert.forEach { destination ->
+                    //dao.insert(destination)
+               // }
+            //}
+        //}
     }
 }
