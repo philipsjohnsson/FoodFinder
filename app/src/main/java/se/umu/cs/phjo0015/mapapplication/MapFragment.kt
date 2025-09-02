@@ -60,6 +60,7 @@ class MapFragment : Fragment() {
     private lateinit var prefs: SharedPreferences
     private var permissionState: MutableState<Boolean> = mutableStateOf(false)
     private lateinit var destinations: LiveData<List<Destination>>
+    private var pickedDestination: Destination? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,19 +92,6 @@ class MapFragment : Fragment() {
         val viewModel = ViewModelProvider(requireActivity())[DestinationViewModel::class.java]
         destinations = viewModel.destinations
 
-
-
-        viewModel.destinations.observe(viewLifecycleOwner) { destinationList ->
-            println(destinationList)
-
-            for(destination in destinationList) {
-                println(destination.topic)
-                println(destination.long)
-                println(destination.lat)
-                println(destination.description)
-            }
-        }
-
         // Inflate the layout for this fragment
         val view = ComposeView(requireContext())
         view.setContent {
@@ -127,7 +115,7 @@ class MapFragment : Fragment() {
 
                 // https://developer.android.com/develop/ui/compose/components/bottom-sheets
                 // https://developer.android.com/reference/kotlin/androidx/compose/material3/SheetState
-                BottomSheetWithDrag(::setBottomSheetVisible)
+                BottomSheetWithDrag(::setBottomSheetVisible, pickedDestination)
             }
         }
 
@@ -217,10 +205,16 @@ class MapFragment : Fragment() {
         showDialog.value = bol
     }
 
-    fun onMarkerClick(marker: Marker): Boolean  {
+    fun onMarkerClick(destination: Destination): Boolean  {
+
+        setPickedDestination(destination)
         setBottomSheetVisible(true)
 
         return true
+    }
+
+    fun setPickedDestination (destination: Destination?) {
+        pickedDestination = destination
     }
 
     fun onDismissRequest() {

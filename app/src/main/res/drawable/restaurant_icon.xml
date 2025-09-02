@@ -1,9 +1,37 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="960"
-    android:viewportHeight="960">
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+  <!-- Större droppform -->
   <path
-      android:pathData="M280,880v-366q-51,-14 -85.5,-56T160,360v-280h80v280h40v-280h80v280h40v-280h80v280q0,56 -34.5,98T360,514v366h-80ZM680,880v-320L560,560v-280q0,-83 58.5,-141.5T760,80v800h-80Z"
-      android:fillColor="#1f1f1f"/>
+      android:fillColor="#FF0000"
+      android:pathData="M12,1.5
+                          C7.8,1.5 4.5,4.83 4.5,9
+                          c0,5.8 7.5,14 7.5,14
+                          s7.5,-8.2 7.5,-14
+                          c0,-4.17 -3.33,-7.5 -7.5,-7.5z" />
+
+  <!-- Större vit cirkel -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M12,3
+                      a6,6 0 1,0 0,12
+                      a6,6 0 1,0 0,-12z" />
+
+
+
+  <!-- Mindre ikon, centrerad -->
+  <group
+      android:scaleX="0.010"
+      android:scaleY="0.010"
+      android:translateX="7"
+      android:translateY="4.5">
+    <path
+        android:fillColor="#1f1f1f"
+        android:pathData="M280,880v-366q-51,-14 -85.5,-56T160,360v-280h80v280h40v-280h80v280h40v-280h80v280q0,56 -34.5,98T360,514v366h-80ZM680,880v-320L560,560v-280q0,-83 58.5,-141.5T760,80v800h-80Z" />
+  </group>
+
+
 </vector>

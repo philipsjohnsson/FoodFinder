@@ -2,18 +2,15 @@ package se.umu.cs.phjo0015.mapapplication.database
 
 import android.app.Application;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.AndroidViewModel
 import androidx.room.Room
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * Shared ViewModel that provides access to the reminders in the database for all fragments
  */
 public class DestinationViewModel(application: Application) : AndroidViewModel(application) {
-    lateinit var destinations: LiveData<List<Destination>>
     private val dao: DestinationDao
+    var destinations: LiveData<List<Destination>>
 
     fun getDestination(destinationId: Int): LiveData<Destination> {
         return dao[destinationId]
@@ -54,7 +51,7 @@ public class DestinationViewModel(application: Application) : AndroidViewModel(a
         dao = database.destinationDao()
         destinations = dao.allDestinations
 
-        val destinationsToInsert: List<Destination> = getDataset()
+        // val destinationsToInsert: List<Destination> = getDataset()
 
         // Add default destinations in a background thread.
         //viewModelScope.launch(Dispatchers.IO) {

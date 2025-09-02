@@ -30,7 +30,7 @@ import se.umu.cs.phjo0015.mapapplication.database.Destination
 
 @Composable
 fun OsmdroidMapView(
-    callbackOnMarkerClick: (Marker) -> Boolean,
+    callbackOnMarkerClick: (Destination) -> Boolean,
     destinations: State<List<Destination>>,
     userLocationState: State<UserLocation?>
 ) {
@@ -56,24 +56,6 @@ fun OsmdroidMapView(
             val clusterIcon: Bitmap = BonusPackHelper.getBitmapFromVectorDrawable(context, R.drawable.marker_cluster)
             poiMarkers.setIcon(clusterIcon)
 
-            val randomPoints = List(100) {
-                val lat = 63.8258 + Random.nextDouble(-0.001, 0.001) // +/- 0.001 ~ ca 100 m
-                val lon = 20.2630 + Random.nextDouble(-0.001, 0.001)
-                GeoPoint(lat, lon)
-            }
-
-            for (point in randomPoints) {
-                val marker = Marker(mapView)
-                marker.position = point
-                marker.icon = ContextCompat.getDrawable(context, R.drawable.restaurant_icon)
-                marker.title = "Marker"
-                poiMarkers.add(marker)
-
-                marker.setOnMarkerClickListener{ m, _ ->
-                    callbackOnMarkerClick(m)
-                }
-            }
-
             mapView.overlays.add(poiMarkers)
 
             val copyRightOverlay = CopyrightOverlay(context)
@@ -98,9 +80,10 @@ fun OsmdroidMapView(
                 marker.position = destinationPoint
                 marker.icon = ContextCompat.getDrawable(mapView.context, R.drawable.restaurant_icon)
                 marker.title = destination.topic
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
                 marker.setOnMarkerClickListener{ m, _ ->
-                    callbackOnMarkerClick(m)
+                    callbackOnMarkerClick(destination)
                 }
 
                 poiMarkers.add(marker)
@@ -119,7 +102,7 @@ fun OsmdroidMapView(
                 val userMarker = Marker(mapView).apply {
                     position = userPoint
                     title = "Användarens plats"
-                    icon = ContextCompat.getDrawable(mapView.context, R.drawable.restaurant_icon)
+                    icon = ContextCompat.getDrawable(mapView.context, R.drawable.dot_location)
                 }
 
                 mapView.overlays.add(userMarker)

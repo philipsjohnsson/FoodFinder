@@ -29,10 +29,14 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import se.umu.cs.phjo0015.mapapplication.components.ImageCarouselLazy
+import se.umu.cs.phjo0015.mapapplication.database.Destination
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheetWithDrag(callbackSetBottomSheetVisible: (Boolean) -> Unit) {
+fun BottomSheetWithDrag(
+    callbackSetBottomSheetVisible: (Boolean) -> Unit,
+    pickedDestination: Destination?
+) {
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
 
@@ -55,9 +59,9 @@ fun BottomSheetWithDrag(callbackSetBottomSheetVisible: (Boolean) -> Unit) {
                     .fillMaxWidth()
                     .padding(10.dp)
                 ) {
-                    TopForBottomSheet(callbackSetBottomSheetVisible, scaffoldState)
-                    Text("Restaurang")
-                    ImageCarouselLazy()
+                    TopForBottomSheet(callbackSetBottomSheetVisible, scaffoldState, pickedDestination)
+                    Text(pickedDestination?.description ?: "")
+                    // ImageCarouselLazy()
                 }
             }
         }
@@ -68,7 +72,11 @@ fun BottomSheetWithDrag(callbackSetBottomSheetVisible: (Boolean) -> Unit) {
 // Mby place this in components later instead..
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopForBottomSheet(callbackSetBottomSheetVisible: (Boolean) -> Unit, scaffoldState:  BottomSheetScaffoldState) {
+private fun TopForBottomSheet(
+    callbackSetBottomSheetVisible: (Boolean) -> Unit,
+    scaffoldState:  BottomSheetScaffoldState,
+    pickedDestination: Destination?
+) {
     val scope = rememberCoroutineScope()
 
     Row(
@@ -77,7 +85,7 @@ private fun TopForBottomSheet(callbackSetBottomSheetVisible: (Boolean) -> Unit, 
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Test",
+            text = pickedDestination?.topic ?: "",
             fontSize = 28.sp
         )
         FilledIconButton(
