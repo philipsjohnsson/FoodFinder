@@ -97,31 +97,3 @@ private fun TopForBottomSheet(
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BtmSheet() {
-    val sheetState = rememberModalBottomSheetState()
-    val coroutineScope = rememberCoroutineScope()
-
-    //if (showDialog.value) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                //showDialog.value = false
-            },
-            sheetState = sheetState
-        ) {
-
-            // Sheet content
-            Button(onClick = {
-                coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        // showDialog.value = false
-                    }
-                }
-            }) {
-                Text("Hide bottom sheet")
-            }
-        }
-    //}
-}

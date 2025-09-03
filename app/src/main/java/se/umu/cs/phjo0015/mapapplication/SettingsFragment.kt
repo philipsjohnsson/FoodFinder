@@ -42,14 +42,11 @@ import se.umu.cs.phjo0015.mapapplication.model.UserLocation
 import se.umu.cs.phjo0015.mapapplication.pages.SettingsPage
 
 /**
- * A simple [Fragment] subclass.
- * Use the [SettingsFragment.newInstance] factory method to
- * create an instance of this fragment.
+ * SettingsFragment is used to show all of the settings in the application.
  */
 class SettingsFragment : Fragment() {
 
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
-
     private var permissionState: MutableState<Boolean> = mutableStateOf(false)
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var prefs: SharedPreferences

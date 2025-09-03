@@ -111,17 +111,13 @@ class MapFragment : Fragment() {
             }
 
             if (showDialog.value) {
-                // Screen content
-
-                val showUserPosition: Boolean = true
 
                 // https://developer.android.com/develop/ui/compose/components/bottom-sheets
                 // https://developer.android.com/reference/kotlin/androidx/compose/material3/SheetState
+
                 BottomSheetWithDrag(::setBottomSheetVisible, pickedDestinationState.value)
             }
         }
-
-
 
         return view
     }
@@ -232,27 +228,19 @@ class MapFragment : Fragment() {
         val savedShowDialog = savedInstanceState.getBoolean(KEY_SHOW_DIALOG)
         showDialog.value = savedShowDialog
 
-
-        println("SET DATA, BEFORE DESTINATION ID")
-
         val savedPickedDestinationId = savedInstanceState.getInt(KEY_PICKED_DESTINATION_ID, -1)
         println(savedPickedDestinationId)
         if(savedPickedDestinationId != -1) {
-            // DO THE THING..
-
-            println("BEFORE VIEWMODEL")
 
             // We need to fetch data from the database using a synchronous (suspend) function.
             // Since suspend functions must be called from a coroutine, we use lifecycleScope.launch
             // to run this code asynchronously tied to the Fragment's lifecycle.
             lifecycleScope.launch {
                 val viewModel = ViewModelProvider(requireActivity())[DestinationViewModel::class.java]
+
                 val destination = viewModel.database.destinationDao().getDestinationSync(savedPickedDestinationId)
-                println("WE HAVE CHANGE THE DESTINATION HERE..")
                 if (destination != null) {
                     setPickedDestinationState(destination)
-                    println("DESTINATION")
-                    println(destination.id)
                 }
             }
         }
