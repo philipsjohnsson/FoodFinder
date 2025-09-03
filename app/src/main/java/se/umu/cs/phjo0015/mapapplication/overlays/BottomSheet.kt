@@ -60,7 +60,7 @@ fun BottomSheetWithDrag(
                     .padding(10.dp)
                 ) {
                     TopForBottomSheet(callbackSetBottomSheetVisible, scaffoldState, pickedDestination)
-                    Text(pickedDestination?.description ?: "")
+                    Text(pickedDestination?.description ?: "Loading...")
                     // ImageCarouselLazy()
                 }
             }

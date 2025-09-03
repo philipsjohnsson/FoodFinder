@@ -23,4 +23,8 @@ interface DestinationDao {
     // Only to check if the list is empty, not async
     @Query("SELECT * FROM destination")
     suspend fun getAllDestinationsSync(): List<Destination>
+
+    // Only to get one of the destination with an id, not async.
+    @Query("SELECT * FROM destination WHERE id = :id LIMIT 1")
+    suspend fun getDestinationSync(id: Int): Destination?
 }

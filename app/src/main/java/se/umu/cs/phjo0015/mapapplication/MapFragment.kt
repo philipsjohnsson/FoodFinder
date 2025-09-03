@@ -21,26 +21,25 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.livedata.observeAsState
 import org.osmdroid.config.Configuration
-import org.osmdroid.views.overlay.Marker
 import se.umu.cs.phjo0015.mapapplication.overlays.BottomSheetWithDrag
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.appcompat.widget.Toolbar
-import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
+import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import se.umu.cs.phjo0015.mapapplication.SettingsFragment.Companion.SHOW_USER_LOCATION
@@ -48,7 +47,6 @@ import se.umu.cs.phjo0015.mapapplication.database.Destination
 import se.umu.cs.phjo0015.mapapplication.database.DestinationViewModel
 import se.umu.cs.phjo0015.mapapplication.model.MapState
 import se.umu.cs.phjo0015.mapapplication.model.UserLocation
-
 
 
 /**
@@ -63,7 +61,7 @@ class MapFragment : Fragment() {
     private lateinit var prefs: SharedPreferences
     private var permissionState: MutableState<Boolean> = mutableStateOf(false)
     private lateinit var destinations: LiveData<List<Destination>>
-    private var pickedDestination: Destination? = null
+    private var pickedDestinationState: MutableState<Destination?> = mutableStateOf(null)
     private var mapState = MapState(GeoPoint(63.189460, 14.607896), 5.0, false)
     private var mapViewRef: MapView? = null
 
@@ -119,7 +117,7 @@ class MapFragment : Fragment() {
 
                 // https://developer.android.com/develop/ui/compose/components/bottom-sheets
                 // https://developer.android.com/reference/kotlin/androidx/compose/material3/SheetState
-                BottomSheetWithDrag(::setBottomSheetVisible, pickedDestination)
+                BottomSheetWithDrag(::setBottomSheetVisible, pickedDestinationState.value)
             }
         }
 
@@ -206,28 +204,57 @@ class MapFragment : Fragment() {
 
     fun setBottomSheetVisible(bol: Boolean) {
         showDialog.value = bol
+
+        if(!bol) {
+            setPickedDestinationState(null)
+        }
     }
 
     fun onMarkerClick(destination: Destination): Boolean  {
 
-        setPickedDestination(destination)
+        setPickedDestinationState(destination)
         setBottomSheetVisible(true)
 
         return true
     }
 
-    fun setPickedDestination (destination: Destination?) {
-        pickedDestination = destination
+    fun setPickedDestinationState (destination: Destination?) {
+        pickedDestinationState.value = destination
     }
 
     fun setSavedData(savedInstanceState: Bundle) {
-        println("SET DATA")
 
         val savedMapState = savedInstanceState.getParcelable<MapState>(KEY_MAP_STATE)
         if(savedMapState != null) {
-            println(savedMapState.getCenter())
-            println(savedMapState.getZoom())
             mapState = savedMapState
+        }
+
+        val savedShowDialog = savedInstanceState.getBoolean(KEY_SHOW_DIALOG)
+        showDialog.value = savedShowDialog
+
+
+        println("SET DATA, BEFORE DESTINATION ID")
+
+        val savedPickedDestinationId = savedInstanceState.getInt(KEY_PICKED_DESTINATION_ID, -1)
+        println(savedPickedDestinationId)
+        if(savedPickedDestinationId != -1) {
+            // DO THE THING..
+
+            println("BEFORE VIEWMODEL")
+
+            // We need to fetch data from the database using a synchronous (suspend) function.
+            // Since suspend functions must be called from a coroutine, we use lifecycleScope.launch
+            // to run this code asynchronously tied to the Fragment's lifecycle.
+            lifecycleScope.launch {
+                val viewModel = ViewModelProvider(requireActivity())[DestinationViewModel::class.java]
+                val destination = viewModel.database.destinationDao().getDestinationSync(savedPickedDestinationId)
+                println("WE HAVE CHANGE THE DESTINATION HERE..")
+                if (destination != null) {
+                    setPickedDestinationState(destination)
+                    println("DESTINATION")
+                    println(destination.id)
+                }
+            }
         }
     }
 
@@ -235,6 +262,11 @@ class MapFragment : Fragment() {
         super.onSaveInstanceState(outState)
 
         outState.putParcelable(KEY_MAP_STATE, mapState)
+
+        pickedDestinationState.value?.let {
+            outState.putInt(KEY_PICKED_DESTINATION_ID, it.id)
+            outState.putBoolean(KEY_SHOW_DIALOG, showDialog.value)
+        }
     }
 
     companion object {
@@ -243,5 +275,7 @@ class MapFragment : Fragment() {
         }
 
         private const val KEY_MAP_STATE = "mapState"
+        private const val KEY_PICKED_DESTINATION_ID = "destinationId"
+        private const val KEY_SHOW_DIALOG = "showDialog"
     }
 }
