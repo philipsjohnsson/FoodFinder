@@ -21,7 +21,11 @@ import se.umu.cs.phjo0015.mapapplication.model.UserLocation
 import kotlin.random.Random
 import androidx.compose.runtime.State
 import androidx.lifecycle.LiveData
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import se.umu.cs.phjo0015.mapapplication.database.Destination
+import se.umu.cs.phjo0015.mapapplication.model.MapState
 
 // Inspired by:
 // https://stackoverflow.com/questions/77297775/create-a-map-using-openstreetmap-with-jetpack-compose-in-kotlin-programming-lang
@@ -29,21 +33,40 @@ import se.umu.cs.phjo0015.mapapplication.database.Destination
 // https://github.com/MKergall/osmbonuspack/wiki/HowToInclude
 
 @Composable
-fun OsmdroidMapView(
+fun osmdroidMapView(
     callbackOnMarkerClick: (Destination) -> Boolean,
     destinations: State<List<Destination>>,
-    userLocationState: State<UserLocation?>
-) {
+    userLocationState: State<UserLocation?>,
+    mapState: MapState
+): MapView? {
+    var mapViewRef: MapView? = null
+
     AndroidView(
         factory = { context ->
             val mapView = MapView(context)
+            mapViewRef = mapView
+
             mapView.setTileSource(TileSourceFactory.MAPNIK)
             mapView.setBuiltInZoomControls(true)
             mapView.setMultiTouchControls(true)
 
             val mapController = mapView.controller
-            mapController.setZoom(5.0)
-            mapController.setCenter(GeoPoint(63.189460, 14.607896))
+            mapController.setZoom(mapState.getZoom())
+            mapController.setCenter(mapState.getCenter())
+
+            mapView.addMapListener(object : MapListener {
+                override fun onScroll(event: ScrollEvent?): Boolean {
+                    mapState.setCenter(mapView.mapCenter as GeoPoint)
+
+                    return true
+                }
+
+                override fun onZoom(event: ZoomEvent?): Boolean {
+                    mapState.setZoom(mapView.zoomLevelDouble)
+
+                    return true
+                }
+            })
 
             // CLUSTER: https://github.com/MKergall/osmbonuspack/wiki/Tutorial_3
             // To edit this cluster design look at the part 11 in the link above.
@@ -66,6 +89,12 @@ fun OsmdroidMapView(
             return@AndroidView mapView
         },
         update = { mapView ->
+
+            mapView.controller.setZoom(mapState.getZoom())
+            mapView.controller.setCenter(mapState.getCenter())
+
+            println("INSIDE OF COMPOSABLES.")
+            println(mapState.getCenter())
 
             val poiMarkers = mapView.getTag(R.id.poi_markers) as RadiusMarkerClusterer
 
@@ -106,13 +135,22 @@ fun OsmdroidMapView(
                 }
 
                 mapView.overlays.add(userMarker)
-                mapView.controller.setCenter(userPoint)
-                mapView.controller.setZoom(8.0)
                 mapView.setTag(R.id.user_marker, userMarker)
+
+                if(!mapState.getHasCenteredOnUser()) {
+                    mapView.controller.setCenter(userPoint)
+                    mapView.controller.setZoom(7.0)
+                    mapState.setCenter(userPoint)
+                    mapState.setZoom(7.0)
+
+                    mapState.setHasCenteredOnUser(true)
+                }
             }
 
             poiMarkers.invalidate()
             mapView.invalidate()
         }
     )
+
+    return mapViewRef
 }

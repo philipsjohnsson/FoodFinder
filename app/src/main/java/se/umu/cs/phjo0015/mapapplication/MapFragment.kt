@@ -41,9 +41,12 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
 import se.umu.cs.phjo0015.mapapplication.SettingsFragment.Companion.SHOW_USER_LOCATION
 import se.umu.cs.phjo0015.mapapplication.database.Destination
 import se.umu.cs.phjo0015.mapapplication.database.DestinationViewModel
+import se.umu.cs.phjo0015.mapapplication.model.MapState
 import se.umu.cs.phjo0015.mapapplication.model.UserLocation
 
 
@@ -61,6 +64,8 @@ class MapFragment : Fragment() {
     private var permissionState: MutableState<Boolean> = mutableStateOf(false)
     private lateinit var destinations: LiveData<List<Destination>>
     private var pickedDestination: Destination? = null
+    private var mapState = MapState(GeoPoint(63.189460, 14.607896), 5.0, false)
+    private var mapViewRef: MapView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,10 +108,9 @@ class MapFragment : Fragment() {
                 Surface(
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    OsmdroidMapView(::onMarkerClick, destinations, userLocationState)
+                    mapViewRef = osmdroidMapView(::onMarkerClick, destinations, userLocationState, mapState)
                 }
             }
-
 
             if (showDialog.value) {
                 // Screen content
@@ -132,14 +136,20 @@ class MapFragment : Fragment() {
 
         permissionState.value = wantsLocation && hasPermission
 
-        Toast.makeText(context, "has permission: $hasPermission", Toast.LENGTH_SHORT).show()
-
         if(permissionState.value) {
-            // Toast.makeText(context, "Permission to show userLocation", Toast.LENGTH_SHORT).show()
             setUserLocation()
         } else {
-            // Toast.makeText(context, "No permission to show userLocation", Toast.LENGTH_SHORT).show()
             userLocationState.value = null
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupMenu()
+
+        // Restore data if available
+        if (savedInstanceState != null) {
+            setSavedData(savedInstanceState)
         }
     }
 
@@ -151,8 +161,6 @@ class MapFragment : Fragment() {
         prefs.edit().putBoolean(SHOW_USER_LOCATION, enabled).apply()
         permissionState.value = enabled
     }
-
-
 
     private fun setUserLocation() {
         if( userHasLocationPermission() == PackageManager.PERMISSION_GRANTED) {
@@ -178,11 +186,6 @@ class MapFragment : Fragment() {
     }
 
     private fun userHasLocationPermission() = ContextCompat.checkSelfPermission((requireContext()), ACCESS_FINE_LOCATION)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupMenu()
-    }
 
     private fun setupMenu() {
         (requireActivity() as MenuHost).addMenuProvider(object : MenuProvider {
@@ -217,13 +220,28 @@ class MapFragment : Fragment() {
         pickedDestination = destination
     }
 
-    fun onDismissRequest() {
-        showDialog.value = false
+    fun setSavedData(savedInstanceState: Bundle) {
+        println("SET DATA")
+
+        val savedMapState = savedInstanceState.getParcelable<MapState>(KEY_MAP_STATE)
+        if(savedMapState != null) {
+            println(savedMapState.getCenter())
+            println(savedMapState.getZoom())
+            mapState = savedMapState
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putParcelable(KEY_MAP_STATE, mapState)
     }
 
     companion object {
         fun newInstance(): MapFragment {
             return MapFragment()
         }
+
+        private const val KEY_MAP_STATE = "mapState"
     }
 }
