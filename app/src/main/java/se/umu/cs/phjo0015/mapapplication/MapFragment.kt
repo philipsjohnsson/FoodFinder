@@ -41,18 +41,15 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
 import se.umu.cs.phjo0015.mapapplication.SettingsFragment.Companion.SHOW_USER_LOCATION
 import se.umu.cs.phjo0015.mapapplication.database.Destination
 import se.umu.cs.phjo0015.mapapplication.database.DestinationViewModel
 import se.umu.cs.phjo0015.mapapplication.model.MapState
 import se.umu.cs.phjo0015.mapapplication.model.UserLocation
-
+import se.umu.cs.phjo0015.mapapplication.pages.osmdroidMapView
 
 /**
- * A simple [Fragment] subclass.
- * Use the [MapFragment.newInstance] factory method to
- * create an instance of this fragment.
+ * MapFragment is used to create a map view on the app.
  */
 class MapFragment : Fragment() {
     private var showDialog: MutableState<Boolean> = mutableStateOf(false)
@@ -60,11 +57,14 @@ class MapFragment : Fragment() {
     private var userLocationState: MutableState<UserLocation?> = mutableStateOf(null)
     private lateinit var prefs: SharedPreferences
     private var permissionState: MutableState<Boolean> = mutableStateOf(false)
-    private lateinit var destinations: LiveData<List<Destination>>
     private var pickedDestinationState: MutableState<Destination?> = mutableStateOf(null)
-    private var mapState = MapState(GeoPoint(63.189460, 14.607896), 5.0, false)
-    private var mapViewRef: MapView? = null
+    private var mapState = MapState(GeoPoint(63.189460, 14.607896), 6.0, false)
 
+
+    /**
+     * Initializes preferences, checks location permissions, and sets up
+     * the location client when the fragment is created.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -81,6 +81,11 @@ class MapFragment : Fragment() {
         }
     }
 
+    /**
+     * Creates and returns the fragment's view. Initializes OSMDroid,
+     * sets up the ViewModel, and builds the UI with Jetpack Compose,
+     * including the map and an optional bottom sheet.
+     */
     @SuppressLint("UnrememberedMutableState")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreateView(
@@ -93,7 +98,6 @@ class MapFragment : Fragment() {
         Configuration.getInstance().userAgentValue = "MapApp"
 
         val viewModel = ViewModelProvider(requireActivity())[DestinationViewModel::class.java]
-        destinations = viewModel.destinations
 
         // Inflate the layout for this fragment
         val view = ComposeView(requireContext())
@@ -106,15 +110,15 @@ class MapFragment : Fragment() {
                 Surface(
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    mapViewRef = osmdroidMapView(::onMarkerClick, destinations, userLocationState, mapState)
+                    osmdroidMapView(::onMarkerClick, destinations, userLocationState, mapState)
                 }
             }
 
             if (showDialog.value) {
 
+                // Inspired by:
                 // https://developer.android.com/develop/ui/compose/components/bottom-sheets
                 // https://developer.android.com/reference/kotlin/androidx/compose/material3/SheetState
-
                 BottomSheetWithDrag(::setBottomSheetVisible, pickedDestinationState.value)
             }
         }
@@ -122,6 +126,24 @@ class MapFragment : Fragment() {
         return view
     }
 
+    /**
+     * Called after the fragment's view is created. Sets up the UI and restores
+     * any previously saved state if available.
+     */
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupMenu()
+
+        // Restore data if available
+        if (savedInstanceState != null) {
+            setSavedData(savedInstanceState)
+        }
+    }
+
+    /**
+     * Called when the fragment becomes active again. Updates the location
+     * permission state and sets or clears the user's location accordingly.
+     */
     override fun onResume() {
         super.onResume()
 
@@ -137,25 +159,24 @@ class MapFragment : Fragment() {
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupMenu()
-
-        // Restore data if available
-        if (savedInstanceState != null) {
-            setSavedData(savedInstanceState)
-        }
-    }
-
+    /**
+     * Gets the permission state
+     */
     private fun getPermissionState(): Boolean {
         return prefs.getBoolean(SHOW_USER_LOCATION, false)
     }
 
+    /**
+     * Sets the permission state
+     */
     private fun setPermissionState(enabled: Boolean) {
         prefs.edit().putBoolean(SHOW_USER_LOCATION, enabled).apply()
         permissionState.value = enabled
     }
 
+    /**
+     * Sets the user location if the user has allowed permission for location.
+     */
     private fun setUserLocation() {
         if( userHasLocationPermission() == PackageManager.PERMISSION_GRANTED) {
             try {
@@ -172,19 +193,24 @@ class MapFragment : Fragment() {
                     }
 
             }  catch(e: SecurityException) {
-                println("ERROR")
-                println(e)
                 userLocationState.value = null
             }
         }
     }
 
+    /**
+     * Checks if the user has Location permission
+     */
     private fun userHasLocationPermission() = ContextCompat.checkSelfPermission((requireContext()), ACCESS_FINE_LOCATION)
 
+    /**
+     * Sets the navbar for this specific fragment
+     */
     private fun setupMenu() {
         (requireActivity() as MenuHost).addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 val toolbar = requireActivity().findViewById<Toolbar>(R.id.my_toolbar)
+                toolbar.title = "Upptäcktskartan"
 
                 toolbar.setNavigationIcon(R.drawable.hamburgermenu)
                 toolbar.setNavigationOnClickListener {
@@ -198,6 +224,9 @@ class MapFragment : Fragment() {
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
+    /**
+     * Sets the visible of bottomSheet
+     */
     fun setBottomSheetVisible(bol: Boolean) {
         showDialog.value = bol
 
@@ -206,6 +235,11 @@ class MapFragment : Fragment() {
         }
     }
 
+    /**
+     * When a user clicks a marker, we will handle this click here.
+     * Sets show bottomSheet
+     * Sets the picked destination to show
+     */
     fun onMarkerClick(destination: Destination): Boolean  {
 
         setPickedDestinationState(destination)
@@ -214,20 +248,29 @@ class MapFragment : Fragment() {
         return true
     }
 
+    /**
+     *  sets the picked destination
+     */
     fun setPickedDestinationState (destination: Destination?) {
         pickedDestinationState.value = destination
     }
 
+    /**
+     * Sets the saved data to the restored fragment
+     */
     fun setSavedData(savedInstanceState: Bundle) {
 
+        // Sets the saved map state
         val savedMapState = savedInstanceState.getParcelable<MapState>(KEY_MAP_STATE)
         if(savedMapState != null) {
             mapState = savedMapState
         }
 
+        // Sets the saved showDialog
         val savedShowDialog = savedInstanceState.getBoolean(KEY_SHOW_DIALOG)
         showDialog.value = savedShowDialog
 
+        // Sets the saved picked destination
         val savedPickedDestinationId = savedInstanceState.getInt(KEY_PICKED_DESTINATION_ID, -1)
         println(savedPickedDestinationId)
         if(savedPickedDestinationId != -1) {
@@ -238,7 +281,7 @@ class MapFragment : Fragment() {
             lifecycleScope.launch {
                 val viewModel = ViewModelProvider(requireActivity())[DestinationViewModel::class.java]
 
-                val destination = viewModel.database.destinationDao().getDestinationSync(savedPickedDestinationId)
+                val destination = viewModel.getDestinationSync(savedPickedDestinationId)
                 if (destination != null) {
                     setPickedDestinationState(destination)
                 }
@@ -246,11 +289,16 @@ class MapFragment : Fragment() {
         }
     }
 
+    /**
+     * Saves data, so the data can be restored if the fragment is recreated.
+     */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
+        // Save the maps state
         outState.putParcelable(KEY_MAP_STATE, mapState)
 
+        // Save the information about the picked destination, if it exists
         pickedDestinationState.value?.let {
             outState.putInt(KEY_PICKED_DESTINATION_ID, it.id)
             outState.putBoolean(KEY_SHOW_DIALOG, showDialog.value)

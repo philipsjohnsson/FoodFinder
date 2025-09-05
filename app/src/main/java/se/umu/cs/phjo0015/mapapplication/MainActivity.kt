@@ -11,10 +11,12 @@ import se.umu.cs.phjo0015.mapapplication.components.DrawerContent
 import se.umu.cs.phjo0015.mapapplication.components.DrawerItem
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var navController: NavController
-    private val drawerMenuItems = mutableListOf<String>("Inställningar")
 
+    /**
+     * Initializes the main activity. Sets up the layout, toolbar,
+     * navigation controller, and drawer content with Jetpack Compose.
+     */
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +36,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Toggles the drawer menu.
+     */
     fun toggleDrawer() {
         val drawerLayout = findViewById<androidx.drawerlayout.widget.DrawerLayout>(R.id.drawer_layout)
 
@@ -44,6 +49,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Handles click on drawer item, navigates to the destination.
+     */
     fun onClickDrawerItem(drawerItem: DrawerItem) {
         val destinationId = getDestinationId(drawerItem)
 
@@ -51,15 +59,23 @@ class MainActivity : AppCompatActivity() {
         navigateTo(destinationId)
     }
 
+    /**
+     * Gets the destination id
+     */
     fun getDestinationId(drawerItem: DrawerItem): Int {
         if(drawerItem == DrawerItem.SETTINGS) {
             return R.id.settingsFragment
+        } else if(drawerItem == DrawerItem.ABOUT) {
+            return R.id.aboutFragment
         }
 
         // Default, come to the map view
         return R.id.mapFragment
     }
 
+    /**
+     * Navigates to the fragment that is provided.
+     */
     fun navigateTo(fragmentId: Int) {
         navController.navigate(fragmentId)
     }

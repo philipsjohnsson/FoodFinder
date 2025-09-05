@@ -24,4 +24,10 @@
         android:name="se.umu.cs.phjo0015.mapapplication.SettingsFragment"
         android:label="fragment_settings"
         tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="se.umu.cs.phjo0015.mapapplication.AboutFragment"
+        android:label="fragment_about"
+        tools:layout="@layout/fragment_about" />
 </navigation>

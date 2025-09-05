@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.room.Room
 
 /**
- * Shared ViewModel that provides access to the reminders in the database for all fragments
+ * Shared ViewModel that provides access to the destinations in the database for all fragments
  */
 public class DestinationViewModel(application: Application) : AndroidViewModel(application) {
     private val dao: DestinationDao
@@ -16,8 +16,8 @@ public class DestinationViewModel(application: Application) : AndroidViewModel(a
         return dao[destinationId]
     }
 
-    fun getDestinations() {
-
+    suspend fun getDestinationSync(destinationId: Int): Destination? {
+        return dao.getDestinationSync(destinationId)
     }
 
     /**
@@ -50,18 +50,5 @@ public class DestinationViewModel(application: Application) : AndroidViewModel(a
     init {
         dao = database.destinationDao()
         destinations = dao.allDestinations
-
-        // val destinationsToInsert: List<Destination> = getDataset()
-
-        // Add default destinations in a background thread.
-        //viewModelScope.launch(Dispatchers.IO) {
-            //val currentDestinations = dao.getAllDestinationsSync()
-
-            //if(currentDestinations.isEmpty()) {
-                //destinationsToInsert.forEach { destination ->
-                    //dao.insert(destination)
-               // }
-            //}
-        //}
     }
 }

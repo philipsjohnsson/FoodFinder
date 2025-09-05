@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Class representing a destination with a lat,long,topic and description content.
+ * Class representing a destination with a lat, long, topic and description content.
  * Annotated with Entity so can be stored in a database managed by Room
  */
 @Entity

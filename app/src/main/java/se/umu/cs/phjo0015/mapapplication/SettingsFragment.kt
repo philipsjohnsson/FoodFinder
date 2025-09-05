@@ -1,13 +1,11 @@
 package se.umu.cs.phjo0015.mapapplication
 
-import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -19,7 +17,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresPermission
 import androidx.appcompat.widget.Toolbar
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -30,22 +27,15 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
-import se.umu.cs.phjo0015.mapapplication.utils.PermissionManager
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.CancellationToken
-import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.android.gms.tasks.OnTokenCanceledListener
 import se.umu.cs.phjo0015.mapapplication.model.SettingsToggle
-import se.umu.cs.phjo0015.mapapplication.model.UserLocation
 import se.umu.cs.phjo0015.mapapplication.pages.SettingsPage
 
 /**
  * SettingsFragment is used to show all of the settings in the application.
  */
 class SettingsFragment : Fragment() {
-
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private var permissionState: MutableState<Boolean> = mutableStateOf(false)
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -82,6 +72,11 @@ class SettingsFragment : Fragment() {
         )
     )
 
+    /**
+     * Called when the fragment is created. Initializes shared preferences,
+     * sets up app settings and permission handling, and prepares the
+     * fused location client.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -93,23 +88,9 @@ class SettingsFragment : Fragment() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
     }
 
-    fun initSettings() {
-        permissionState.value = getPermissionState()
-    }
-
-    private fun userHasLocationPermission() = ContextCompat.checkSelfPermission((requireContext()), ACCESS_FINE_LOCATION)
-    private fun shouldShowPermissionRationale(ACCESS_REQUEST: String) =
-        ActivityCompat.shouldShowRequestPermissionRationale(requireContext() as Activity, ACCESS_REQUEST)
-
-    fun showPermissionRational(positiveAction: () -> Unit) {
-        AlertDialog.Builder(requireActivity())
-            .setTitle("Platsåtkomst")
-            .setMessage("Platsåtkomst behövs för att visa din position")
-            .setPositiveButton(R.string.confirm) {_, _ -> positiveAction()}
-            .setNegativeButton(R.string.decline) {dialog,_ -> dialog.dismiss() }
-            .create().show()
-    }
-
+    /**
+     * Shows the SettingPage with jetpack compose.
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -123,18 +104,65 @@ class SettingsFragment : Fragment() {
         return view
     }
 
+    /**
+     * Called after the fragment's view has been created. Sets up
+     * the menu and any related UI components.
+     */
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupMenu()
+    }
+
+
+    /**
+     * Inits the settings of the app
+     */
+    fun initSettings() {
+        permissionState.value = getPermissionState()
+    }
+
+
+    /**
+     * Checks if a user has Location permission
+     */
+    private fun userHasLocationPermission() = ContextCompat.checkSelfPermission((requireContext()), ACCESS_FINE_LOCATION)
+
+    /**
+     * Returns true if the app should show a rationale for requesting
+     * the given permission, typically after the user has previously denied it.
+     */
+    private fun shouldShowPermissionRationale(ACCESS_REQUEST: String) =
+        ActivityCompat.shouldShowRequestPermissionRationale(requireContext() as Activity, ACCESS_REQUEST)
+
+
+    /**
+     * Displays a permission rationale dialog explaining why location access
+     * is needed. Executes the given positiveAction if the user confirms.
+     */
+    fun showPermissionRational(positiveAction: () -> Unit) {
+        AlertDialog.Builder(requireActivity())
+            .setTitle("Platsåtkomst")
+            .setMessage("Platsåtkomst behövs för att visa din position")
+            .setPositiveButton(R.string.confirm) {_, _ -> positiveAction()}
+            .setNegativeButton(R.string.decline) {dialog,_ -> dialog.dismiss() }
+            .create().show()
+    }
+
+    /**
+     * Retrieves whether the user has granted location access from shared preferences.
+     * Returns true if permission is granted, false otherwise.
+     */
     private fun getPermissionState(): Boolean {
         return prefs.getBoolean(SHOW_USER_LOCATION, false)
     }
 
+
+    /**
+     * Updates the location permission state in shared preferences
+     */
     private fun setPermissionState(enabled: Boolean) {
         prefs.edit().putBoolean(SHOW_USER_LOCATION, enabled).apply()
         permissionState.value = enabled
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupMenu()
     }
 
     private fun setRequestPermissionLauncher() {
@@ -166,20 +194,23 @@ class SettingsFragment : Fragment() {
                     // settings in an effort to convince the user to change their
                     // decision.
                     setPermissionState(false)
-                    Toast.makeText(requireContext(), "Platsåtkomst nekad permanent, ändra i inställningar för att få tillgång.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Platsåtkomst nekad permanent, ändra i inställningar på mobilen för att få tillgång.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
+    /**
+     * Sets the navbar for this specific fragment
+     */
     private fun setupMenu() {
         (requireActivity() as MenuHost).addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
 
-
                 val toolbar = requireActivity().findViewById<Toolbar>(R.id.my_toolbar)
 
                 toolbar.setNavigationIcon(R.drawable.back)
+                toolbar.setTitle("Inställningar")
                 toolbar.setNavigationOnClickListener {
                     findNavController().popBackStack()
                 }

@@ -7,7 +7,7 @@ import androidx.annotation.RequiresApi
 import org.osmdroid.util.GeoPoint
 
 class MapState(
-    private var center: GeoPoint,
+    private var center: GeoPoint?,
     private var zoom: Double,
     private var hasCenteredOnUser: Boolean
 ): Parcelable {
@@ -41,7 +41,7 @@ class MapState(
         return zoom
     }
 
-    fun getCenter(): GeoPoint {
+    fun getCenter(): GeoPoint? {
         return center
     }
 

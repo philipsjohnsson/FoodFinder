@@ -1,12 +1,7 @@
-package se.umu.cs.phjo0015.mapapplication
+package se.umu.cs.phjo0015.mapapplication.pages
 
 import android.graphics.Bitmap
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -17,13 +12,11 @@ import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
 import org.osmdroid.bonuspack.utils.BonusPackHelper
 import org.osmdroid.views.overlay.CopyrightOverlay
 import se.umu.cs.phjo0015.mapapplication.model.UserLocation
-// import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer
-import kotlin.random.Random
 import androidx.compose.runtime.State
-import androidx.lifecycle.LiveData
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
+import se.umu.cs.phjo0015.mapapplication.R
 import se.umu.cs.phjo0015.mapapplication.database.Destination
 import se.umu.cs.phjo0015.mapapplication.model.MapState
 
@@ -38,7 +31,7 @@ fun osmdroidMapView(
     destinations: State<List<Destination>>,
     userLocationState: State<UserLocation?>,
     mapState: MapState
-): MapView? {
+) {
     var mapViewRef: MapView? = null
 
     AndroidView(
@@ -52,7 +45,7 @@ fun osmdroidMapView(
 
             val mapController = mapView.controller
             mapController.setZoom(mapState.getZoom())
-            mapController.setCenter(mapState.getCenter())
+            mapController.setCenter(mapState.getCenter() ?: GeoPoint(63.189460, 14.607896))
 
             mapView.addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean {
@@ -92,9 +85,6 @@ fun osmdroidMapView(
 
             mapView.controller.setZoom(mapState.getZoom())
             mapView.controller.setCenter(mapState.getCenter())
-
-            println("INSIDE OF COMPOSABLES.")
-            println(mapState.getCenter())
 
             val poiMarkers = mapView.getTag(R.id.poi_markers) as RadiusMarkerClusterer
 
@@ -138,10 +128,11 @@ fun osmdroidMapView(
                 mapView.setTag(R.id.user_marker, userMarker)
 
                 if(!mapState.getHasCenteredOnUser()) {
+
+                    mapView.controller.setZoom(15.0)
                     mapView.controller.setCenter(userPoint)
-                    mapView.controller.setZoom(7.0)
+                    mapState.setZoom(15.0)
                     mapState.setCenter(userPoint)
-                    mapState.setZoom(7.0)
 
                     mapState.setHasCenteredOnUser(true)
                 }
@@ -151,6 +142,4 @@ fun osmdroidMapView(
             mapView.invalidate()
         }
     )
-
-    return mapViewRef
 }

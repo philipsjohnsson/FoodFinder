@@ -4,16 +4,16 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-  <!-- Större droppform -->
+  <!-- Big dropshape -->
   <path
-      android:fillColor="#FF0000"
+      android:fillColor="#FF5722"
       android:pathData="M12,1.5
                           C7.8,1.5 4.5,4.83 4.5,9
                           c0,5.8 7.5,14 7.5,14
                           s7.5,-8.2 7.5,-14
                           c0,-4.17 -3.33,-7.5 -7.5,-7.5z" />
 
-  <!-- Större vit cirkel -->
+  <!-- Big circle -->
   <path
       android:fillColor="#FFFFFF"
       android:pathData="M12,3
@@ -22,7 +22,7 @@
 
 
 
-  <!-- Mindre ikon, centrerad -->
+  <!-- Icon -->
   <group
       android:scaleX="0.010"
       android:scaleY="0.010"
