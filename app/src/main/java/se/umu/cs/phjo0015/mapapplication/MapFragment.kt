@@ -272,7 +272,6 @@ class MapFragment : Fragment() {
 
         // Sets the saved picked destination
         val savedPickedDestinationId = savedInstanceState.getInt(KEY_PICKED_DESTINATION_ID, -1)
-        println(savedPickedDestinationId)
         if(savedPickedDestinationId != -1) {
 
             // We need to fetch data from the database using a synchronous (suspend) function.

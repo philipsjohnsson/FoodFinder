@@ -1,5 +1,6 @@
 package se.umu.cs.phjo0015.mapapplication.pages
 
+import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.viewinterop.AndroidView
@@ -13,6 +14,7 @@ import org.osmdroid.bonuspack.utils.BonusPackHelper
 import org.osmdroid.views.overlay.CopyrightOverlay
 import se.umu.cs.phjo0015.mapapplication.model.UserLocation
 import androidx.compose.runtime.State
+import org.osmdroid.api.IMapController
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
@@ -39,43 +41,14 @@ fun osmdroidMapView(
             val mapView = MapView(context)
             mapViewRef = mapView
 
-            mapView.setTileSource(TileSourceFactory.MAPNIK)
-            mapView.setBuiltInZoomControls(true)
-            mapView.setMultiTouchControls(true)
+            initSettingsMapView(mapView)
 
             val mapController = mapView.controller
-            mapController.setZoom(mapState.getZoom())
-            mapController.setCenter(mapState.getCenter() ?: GeoPoint(63.189460, 14.607896))
 
-            mapView.addMapListener(object : MapListener {
-                override fun onScroll(event: ScrollEvent?): Boolean {
-                    mapState.setCenter(mapView.mapCenter as GeoPoint)
-
-                    return true
-                }
-
-                override fun onZoom(event: ZoomEvent?): Boolean {
-                    mapState.setZoom(mapView.zoomLevelDouble)
-
-                    return true
-                }
-            })
-
-            // CLUSTER: https://github.com/MKergall/osmbonuspack/wiki/Tutorial_3
-            // To edit this cluster design look at the part 11 in the link above.
-            val poiMarkers: RadiusMarkerClusterer = RadiusMarkerClusterer(context)
-            //val testClusterIcon = ContextCompat.getDrawable(context, R.drawable.restaurant_icon)
-
-            // Save reference for poiMarkers
-            mapView.setTag(R.id.poi_markers, poiMarkers)
-
-            val clusterIcon: Bitmap = BonusPackHelper.getBitmapFromVectorDrawable(context, R.drawable.marker_cluster)
-            poiMarkers.setIcon(clusterIcon)
-
-            mapView.overlays.add(poiMarkers)
-
-            val copyRightOverlay = CopyrightOverlay(context)
-            mapView.overlays.add(copyRightOverlay)
+            setMapPosition(mapController, mapState)
+            setupMapListeners(mapView, mapState)
+            initClusterHandling(context, mapView)
+            setCopyRightOverlay(context, mapView)
 
             mapView.invalidate()
 
@@ -83,63 +56,122 @@ fun osmdroidMapView(
         },
         update = { mapView ->
 
-            mapView.controller.setZoom(mapState.getZoom())
-            mapView.controller.setCenter(mapState.getCenter())
+            setMapPosition(mapView.controller, mapState)
 
             val poiMarkers = mapView.getTag(R.id.poi_markers) as RadiusMarkerClusterer
 
             // Remove old markers
             poiMarkers.items.clear()
 
-            // Add new markers when the data has fetched from the database
-            destinations.value.forEach { destination ->
-                val marker = Marker(mapView)
-                val destinationPoint = GeoPoint(destination.lat, destination.long)
+            setDestinationsMarkers(destinations, mapView, callbackOnMarkerClick, poiMarkers)
 
-                marker.position = destinationPoint
-                marker.icon = ContextCompat.getDrawable(mapView.context, R.drawable.restaurant_icon)
-                marker.title = destination.topic
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-
-                marker.setOnMarkerClickListener{ m, _ ->
-                    callbackOnMarkerClick(destination)
-                }
-
-                poiMarkers.add(marker)
-            }
-
-            // Remove old location Marker
-            val oldMarker = mapView.getTag(R.id.user_marker) as? Marker
-            if (oldMarker != null) {
-                mapView.overlays.remove(oldMarker)
-                mapView.setTag(R.id.user_marker, null)
-            }
-
-            // Add location marker for user
-            userLocationState.value?.let { userLocation ->
-                val userPoint = GeoPoint(userLocation.latitude, userLocation.longitude)
-                val userMarker = Marker(mapView).apply {
-                    position = userPoint
-                    title = "Användarens plats"
-                    icon = ContextCompat.getDrawable(mapView.context, R.drawable.dot_location)
-                }
-
-                mapView.overlays.add(userMarker)
-                mapView.setTag(R.id.user_marker, userMarker)
-
-                if(!mapState.getHasCenteredOnUser()) {
-
-                    mapView.controller.setZoom(15.0)
-                    mapView.controller.setCenter(userPoint)
-                    mapState.setZoom(15.0)
-                    mapState.setCenter(userPoint)
-
-                    mapState.setHasCenteredOnUser(true)
-                }
-            }
+            removeOldLocationMarker(mapView)
+            addLocationMarker(mapView, userLocationState, mapState)
 
             poiMarkers.invalidate()
             mapView.invalidate()
         }
     )
+}
+
+private fun initSettingsMapView(mapView: MapView) {
+    mapView.setTileSource(TileSourceFactory.MAPNIK)
+    mapView.setBuiltInZoomControls(true)
+    mapView.setMultiTouchControls(true)
+}
+
+private fun setMapPosition(mapController: IMapController, mapState: MapState) {
+    mapController.setZoom(mapState.getZoom())
+    mapController.setCenter(mapState.getCenter() ?: GeoPoint(63.189460, 14.607896))
+}
+
+private fun setupMapListeners(mapView: MapView, mapState: MapState) {
+    mapView.addMapListener(object : MapListener {
+        override fun onScroll(event: ScrollEvent?): Boolean {
+            mapState.setCenter(mapView.mapCenter as GeoPoint)
+
+            return true
+        }
+
+        override fun onZoom(event: ZoomEvent?): Boolean {
+            mapState.setZoom(mapView.zoomLevelDouble)
+
+            return true
+        }
+    })
+}
+
+private fun initClusterHandling(context: Context, mapView: MapView) {
+    // CLUSTER: https://github.com/MKergall/osmbonuspack/wiki/Tutorial_3
+    // To edit this cluster design look at the part 11 in the link above.
+    val poiMarkers: RadiusMarkerClusterer = RadiusMarkerClusterer(context)
+
+    // Save reference for poiMarkers
+    mapView.setTag(R.id.poi_markers, poiMarkers)
+
+    val clusterIcon: Bitmap = BonusPackHelper.getBitmapFromVectorDrawable(context, R.drawable.marker_cluster)
+    poiMarkers.setIcon(clusterIcon)
+
+    mapView.overlays.add(poiMarkers)
+}
+
+private fun setCopyRightOverlay(context: Context, mapView: MapView) {
+    val copyRightOverlay = CopyrightOverlay(context)
+    mapView.overlays.add(copyRightOverlay)
+}
+
+private fun setDestinationsMarkers(
+        destinations: State<List<Destination>>,
+        mapView: MapView,
+        callbackOnMarkerClick: (Destination) -> Boolean,
+        poiMarkers: RadiusMarkerClusterer
+    ) {
+    // Add new markers when the data has fetched from the database
+    destinations.value.forEach { destination ->
+        val marker = Marker(mapView)
+        val destinationPoint = GeoPoint(destination.lat, destination.long)
+
+        marker.position = destinationPoint
+        marker.icon = ContextCompat.getDrawable(mapView.context, R.drawable.restaurant_icon)
+        marker.title = destination.topic
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+
+        marker.setOnMarkerClickListener{ m, _ ->
+            callbackOnMarkerClick(destination)
+        }
+
+        poiMarkers.add(marker)
+    }
+}
+
+private fun removeOldLocationMarker(mapView: MapView) {
+    val oldMarker = mapView.getTag(R.id.user_marker) as? Marker
+    if (oldMarker != null) {
+        mapView.overlays.remove(oldMarker)
+        mapView.setTag(R.id.user_marker, null)
+    }
+}
+
+private fun addLocationMarker(mapView: MapView, userLocationState: State<UserLocation?>, mapState: MapState) {
+    userLocationState.value?.let { userLocation ->
+        val userPoint = GeoPoint(userLocation.latitude, userLocation.longitude)
+        val userMarker = Marker(mapView).apply {
+            position = userPoint
+            title = "Användarens plats"
+            icon = ContextCompat.getDrawable(mapView.context, R.drawable.dot_location)
+        }
+
+        mapView.overlays.add(userMarker)
+        mapView.setTag(R.id.user_marker, userMarker)
+
+        if(!mapState.getHasCenteredOnUser()) {
+
+            mapView.controller.setZoom(15.0)
+            mapView.controller.setCenter(userPoint)
+            mapState.setZoom(15.0)
+            mapState.setCenter(userPoint)
+
+            mapState.setHasCenteredOnUser(true)
+        }
+    }
 }
