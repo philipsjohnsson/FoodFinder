@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AboutPage() {
+
     Column (
         Modifier
             .padding(16.dp)
@@ -25,7 +26,7 @@ fun AboutPage() {
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                "1.0",
+                "1.1.0",
                 style = MaterialTheme.typography.titleMedium
             )
             Text("Appens syfte",
