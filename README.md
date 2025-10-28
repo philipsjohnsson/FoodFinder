@@ -30,12 +30,16 @@ Within **MainActivity**, navigation between the different parts of the main view
 Both **MainActivity**, **SettingsFragment**, and **AboutFragment** use a shared **NavController**, connected to the **NavHostFragment** that is loaded into MainActivity’s **FragmentContainerView**. This ensures that all parts of the app share the same navigation structure.
 *(See Figure 1 for an overview of the app’s navigation.)*
 
+![Fragment Overview](images-readme/fragment-overview.png)
+
 **Figure 1:** Overview of the navigation structure in the application.
 
 A **database** has also been implemented to manage the different restaurant destinations. This functionality begins in **MapFragment**, which uses **MainActivity** (not shown in the diagram below) to create an instance of **DestinationViewModel**. This ViewModel provides access to the restaurant data for all fragments within the app.
 
 When accessed for the first time, the database is initialized with a preloaded dataset containing a selection of restaurant locations. The **DestinationViewModel** uses the database initialization provided by **DestinationDao**, where various queries are defined to retrieve, delete, or insert restaurant data. Currently, only retrieval operations are used at this stage.
 *(See Figure 2 for an overview of the database classes in the application.)*
+
+![Fragment Databaseclasses](images-readme/overview-databaseclasses.png)
 
 **Figure 2:** Overview of the database classes in the app.
 
